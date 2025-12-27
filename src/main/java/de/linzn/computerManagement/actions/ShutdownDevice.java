@@ -1,11 +1,23 @@
+/*
+ * Copyright (c) 2025 MirraNET, Niklas Linz. All rights reserved.
+ *
+ * This file is part of the MirraNET project and is licensed under the
+ * GNU Lesser General Public License v3.0 (LGPLv3).
+ *
+ * You may use, distribute and modify this code under the terms
+ * of the LGPLv3 license. You should have received a copy of the
+ * license along with this file. If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>
+ * or contact: niklas.linz@mirranet.de
+ */
+
 package de.linzn.computerManagement.actions;
 
 
 import de.linzn.computerManagement.Computer;
-import de.linzn.computerManagement.OSType;
 import de.linzn.computerManagement.ComputerManagementPlugin;
-import de.stem.stemSystem.STEMSystemApp;
-import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
+import de.linzn.computerManagement.OSType;
+import de.linzn.stem.STEMApp;
+import de.linzn.stem.taskManagment.operations.defaultOperations.ShellOperation;
 
 public class ShutdownDevice implements DeviceActions {
     private final Computer computer;
@@ -23,11 +35,11 @@ public class ShutdownDevice implements DeviceActions {
         shellOperation.setSshHost(computer.getStaticIP());
         shellOperation.setSshPort(computer.getStaticSSHPort());
 
-        if(computer.getOsType() == OSType.WINDOWS) {
+        if (computer.getOsType() == OSType.WINDOWS) {
             shellOperation.setScriptCommand("shutdown -s -f -t 5");
-        } else if(computer.getOsType() == OSType.LINUX){
+        } else if (computer.getOsType() == OSType.LINUX) {
             shellOperation.setScriptCommand("shutdown -h now");
         }
-        STEMSystemApp.getInstance().getScheduler().runTask(ComputerManagementPlugin.computerManagementPlugin, shellOperation);
+        STEMApp.getInstance().getScheduler().runTask(ComputerManagementPlugin.computerManagementPlugin, shellOperation);
     }
 }
