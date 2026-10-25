@@ -12,11 +12,9 @@
 
 package de.linzn.computerManagement.actions;
 
-
 import de.linzn.computerManagement.Computer;
 import de.linzn.computerManagement.ComputerManagementPlugin;
 import de.linzn.computerManagement.OSType;
-import de.linzn.stem.STEMApp;
 import de.linzn.stem.taskManagment.operations.defaultOperations.ShellOperation;
 
 public class ShutdownDevice implements DeviceActions {
@@ -34,12 +32,11 @@ public class ShutdownDevice implements DeviceActions {
         shellOperation.setSshUser(computer.getStaticSSHUsername());
         shellOperation.setSshHost(computer.getStaticIP());
         shellOperation.setSshPort(computer.getStaticSSHPort());
-
         if (computer.getOsType() == OSType.WINDOWS) {
             shellOperation.setScriptCommand("shutdown -s -f -t 5");
-        } else if (computer.getOsType() == OSType.LINUX) {
+        } else {
             shellOperation.setScriptCommand("shutdown -h now");
         }
-        STEMApp.getInstance().getScheduler().runTask(ComputerManagementPlugin.computerManagementPlugin, shellOperation);
+        ComputerManagementPlugin.computerManagementPlugin.getStemApi().scheduler().runAsync(shellOperation);
     }
 }

@@ -12,21 +12,18 @@
 
 package de.linzn.computerManagement;
 
-import de.linzn.stem.STEMApp;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 public class Computer {
-
     private final String name;
     private final OSType osType;
     private final String macAddress;
     private final String staticIP;
     private final String staticSSHUsername;
     private final int staticSSHPort;
-    private DeviceStatus deviceStatus;
+    private volatile DeviceStatus deviceStatus;
 
     public Computer(String name, OSType osType, String macAddress, String staticIP, int staticSSHPort, String staticSSHUsername) {
         this.name = name;
@@ -36,27 +33,21 @@ public class Computer {
         this.staticSSHPort = staticSSHPort;
         this.staticSSHUsername = staticSSHUsername;
         this.deviceStatus = DeviceStatus.UNKNOWN;
-        STEMApp.getInstance().getScheduler().runRepeatScheduler(ComputerManagementPlugin.computerManagementPlugin, this::request_device_status, 1, 2, TimeUnit.SECONDS);
+        ComputerManagementPlugin.computerManagementPlugin.getStemApi().scheduler().runRepeating(this::request_device_status, 1, 2, TimeUnit.SECONDS);
     }
 
     private void request_device_status() {
         DeviceStatus newStatus;
         try {
-            if (InetAddress.getByName(staticIP).isReachable(1500)) {
-                newStatus = DeviceStatus.ONLINE;
-            } else {
-                newStatus = DeviceStatus.OFFLINE;
-            }
+            newStatus = InetAddress.getByName(staticIP).isReachable(1500) ? DeviceStatus.ONLINE : DeviceStatus.OFFLINE;
         } catch (IOException e) {
             newStatus = DeviceStatus.UNKNOWN;
-            STEMApp.LOGGER.ERROR(e);
         }
         if (this.deviceStatus != newStatus) {
-            STEMApp.LOGGER.INFO("Computer " + this.name + " changed status to " + newStatus.name());
+            ComputerManagementPlugin.computerManagementPlugin.getPluginLogger().info("Computer " + this.name + " changed status to " + newStatus.name());
         }
         this.deviceStatus = newStatus;
     }
-
 
     public String getName() {
         return name;

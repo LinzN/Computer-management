@@ -17,19 +17,19 @@ import de.linzn.webapi.WebApiPlugin;
 import de.linzn.webapi.modules.WebModule;
 
 public class ComputerWebapiHandler {
-
-    private STEMPlugin stemPlugin;
+    private final STEMPlugin stemPlugin;
+    private final WebModule computerWebApiModule;
 
     public ComputerWebapiHandler(STEMPlugin stemPlugin) {
         this.stemPlugin = stemPlugin;
-        this.registerHandler();
+        this.computerWebApiModule = new WebModule("computermanagement");
+        this.computerWebApiModule.registerSubCallHandler(new WakeupComputer(), "wakeup");
+        this.computerWebApiModule.registerSubCallHandler(new ShutdownComputer(), "shutdown");
+        this.computerWebApiModule.registerSubCallHandler(new StatusComputer(), "status");
+        WebApiPlugin.webApiPlugin.getWebServer().enableCallModule(this.computerWebApiModule);
     }
 
-    private void registerHandler() {
-        WebModule computerWebApiModule = new WebModule("computermanagement");
-        computerWebApiModule.registerSubCallHandler(new WakeupComputer(), "wakeup");
-        computerWebApiModule.registerSubCallHandler(new ShutdownComputer(), "shutdown");
-        computerWebApiModule.registerSubCallHandler(new StatusComputer(), "status");
-        WebApiPlugin.webApiPlugin.getWebServer().enableCallModule(computerWebApiModule);
+    public void disable() {
+        WebApiPlugin.webApiPlugin.getWebServer().disableCallModule(this.computerWebApiModule);
     }
 }

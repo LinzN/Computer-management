@@ -17,8 +17,9 @@ import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.stem.modules.pluginModule.STEMPlugin;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ComputerManager {
     private final STEMPlugin stemPlugin;
@@ -26,36 +27,36 @@ public class ComputerManager {
 
     public ComputerManager(STEMPlugin stemPlugin) {
         this.stemPlugin = stemPlugin;
-        this.computerMap = new HashMap<>();
-        ;
+        this.computerMap = new ConcurrentHashMap<>();
         this.loadComputers();
     }
 
     private void loadComputers() {
-        File folder = new File(ComputerManagementPlugin.computerManagementPlugin.getDataFolder(), "devices");
-
-        if (folder.exists()) {
-            for (final File file : folder.listFiles()) {
-                if (file.getName().equalsIgnoreCase("example.yml")) {
+        File folder = new File(stemPlugin.getDataFolder(), "devices");
+        File[] files = folder.listFiles((dir, fileName) -> fileName.endsWith(".yml") && !fileName.equalsIgnoreCase("example.yml"));
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            try {
+                FileConfiguration computerConfig = YamlConfiguration.loadConfiguration(file);
+                String name = computerConfig.getString("device.name");
+                if (name == null || name.isBlank()) {
+                    stemPlugin.getPluginLogger().warning("Device config " + file.getName() + " has no name, skipping");
                     continue;
                 }
-
-                FileConfiguration computerConfig = YamlConfiguration.loadConfiguration(file);
-
-                String name = computerConfig.getString("device.name");
-                OSType osType = OSType.valueOf(computerConfig.getString("device.osType"));
-                String macAddress = computerConfig.getString("device.macAddress");
-                String staticIP = computerConfig.getString("device.staticIP");
-                int staticSSHPort = computerConfig.getInt("device.staticSSHPort");
-                String statusSSHUser = computerConfig.getString("device.staticSSHUser");
-
-                Computer computer = new Computer(name, osType, macAddress, staticIP, staticSSHPort, statusSSHUser);
-                this.computerMap.put(computer.getName().toLowerCase(), computer);
+                OSType osType = OSType.valueOf(String.valueOf(computerConfig.getString("device.osType")).toUpperCase(Locale.ROOT));
+                Computer computer = new Computer(name, osType, computerConfig.getString("device.macAddress"),
+                        computerConfig.getString("device.staticIP"), computerConfig.getInt("device.staticSSHPort"),
+                        computerConfig.getString("device.staticSSHUser"));
+                this.computerMap.put(computer.getName().toLowerCase(Locale.ROOT), computer);
+            } catch (IllegalArgumentException e) {
+                stemPlugin.getPluginLogger().warning("Invalid device config " + file.getName() + ": " + e.getMessage());
             }
         }
     }
 
     public Computer getComputerByName(String name) {
-        return this.computerMap.get(name.toLowerCase());
+        return name == null ? null : this.computerMap.get(name.toLowerCase(Locale.ROOT));
     }
 }

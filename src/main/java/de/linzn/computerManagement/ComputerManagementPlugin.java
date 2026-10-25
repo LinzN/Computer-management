@@ -12,17 +12,14 @@
 
 package de.linzn.computerManagement;
 
-
 import de.linzn.computerManagement.webapi.ComputerWebapiHandler;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
-import de.linzn.stem.STEMApp;
 import de.linzn.stem.modules.pluginModule.STEMPlugin;
 
 import java.io.File;
 
 public class ComputerManagementPlugin extends STEMPlugin {
-
 
     public static ComputerManagementPlugin computerManagementPlugin;
     private ComputerManager computerManager;
@@ -37,19 +34,20 @@ public class ComputerManagementPlugin extends STEMPlugin {
         setUpConfig();
         this.computerManager = new ComputerManager(this);
         this.computerWebapiHandler = new ComputerWebapiHandler(this);
-        STEMApp.getInstance().getCommandModule().registerCommand("computer", new ComputerCommand());
+        this.getStemApi().commands().register("computer", new ComputerCommand());
     }
 
     @Override
     public void onDisable() {
-
+        if (this.computerWebapiHandler != null) {
+            this.computerWebapiHandler.disable();
+        }
     }
 
     private void setUpConfig() {
         this.getDefaultConfig().save();
-        File folder = new File(ComputerManagementPlugin.computerManagementPlugin.getDataFolder(), "devices");
-        if (!folder.exists()) {
-            folder.mkdir();
+        File folder = new File(this.getDataFolder(), "devices");
+        if (!folder.exists() && folder.mkdirs()) {
             File exampleFile = new File(folder, "example.yml");
             FileConfiguration exampleConfigFile = YamlConfiguration.loadConfiguration(exampleFile);
             exampleConfigFile.set("device.name", "test");

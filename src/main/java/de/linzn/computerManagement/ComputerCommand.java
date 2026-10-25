@@ -14,30 +14,33 @@ package de.linzn.computerManagement;
 
 import de.linzn.computerManagement.actions.ShutdownDevice;
 import de.linzn.computerManagement.actions.WakeupDevice;
-import de.linzn.stem.STEMApp;
+import de.linzn.stem.api.StemLogger;
 import de.linzn.stem.modules.commandModule.ICommand;
 
 public class ComputerCommand implements ICommand {
+
     @Override
     public boolean executeTerminal(String[] args) {
-        if (args.length > 1) {
-            Computer computer = ComputerManagementPlugin.computerManagementPlugin.getComputerManager().getComputerByName(args[1]);
-            if (computer == null) {
-                STEMApp.LOGGER.WARNING("No computer found with name " + args[1] + " in device folder!");
-                return true;
-            }
-
-            if (args[0].equalsIgnoreCase("status")) {
-                STEMApp.LOGGER.INFO("Status: " + computer.getDeviceStatus().name());
-            } else if (args[0].equalsIgnoreCase("wakeup")) {
-                new WakeupDevice(computer).runAction();
-                STEMApp.LOGGER.INFO("Wakeup signal send!");
-            } else if (args[0].equalsIgnoreCase("shutdown")) {
-                new ShutdownDevice(computer).runAction();
-                STEMApp.LOGGER.INFO("Shutdown signal send!");
-            } else {
-                STEMApp.LOGGER.WARNING("No action found with name " + args[0] + "!");
-            }
+        StemLogger logger = ComputerManagementPlugin.computerManagementPlugin.getPluginLogger();
+        if (args.length < 2) {
+            logger.info("Usage: computer <status|wakeup|shutdown> <name>");
+            return true;
+        }
+        Computer computer = ComputerManagementPlugin.computerManagementPlugin.getComputerManager().getComputerByName(args[1]);
+        if (computer == null) {
+            logger.warning("No computer found with name " + args[1] + " in device folder!");
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("status")) {
+            logger.info("Status: " + computer.getDeviceStatus().name());
+        } else if (args[0].equalsIgnoreCase("wakeup")) {
+            new WakeupDevice(computer).runAction();
+            logger.info("Wakeup signal send!");
+        } else if (args[0].equalsIgnoreCase("shutdown")) {
+            new ShutdownDevice(computer).runAction();
+            logger.info("Shutdown signal send!");
+        } else {
+            logger.warning("No action found with name " + args[0] + "!");
         }
         return true;
     }

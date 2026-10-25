@@ -27,10 +27,10 @@ public class WakeupComputer extends RequestInterface {
     @Override
     public Object callHttpEvent(HttpExchange httpExchange, HttpRequestClientPayload httpRequestClientPayload) throws IOException {
         ApiResponse apiResponse = new ApiResponse();
-        JSONObject postData = (JSONObject) httpRequestClientPayload.getPostData();
+        JSONObject postData = httpRequestClientPayload.getPostJson();
 
-        String computerName = postData.get("computerName").toString();
-        String requestAction = postData.get("requestAction").toString();
+        String computerName = postData.optString("computerName", "");
+        String requestAction = postData.optString("requestAction", "");
 
         Computer computer = ComputerManagementPlugin.computerManagementPlugin.getComputerManager().getComputerByName(computerName);
 
